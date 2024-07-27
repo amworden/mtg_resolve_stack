@@ -1,3 +1,5 @@
+// src/main.rs
+
 use actix_web::{web, App, HttpServer, HttpResponse};
 use serde_json::json;
 use std::sync::Mutex;

@@ -1,3 +1,5 @@
+// src/models.rs
+
 use serde::{Serialize, Deserialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -26,19 +28,27 @@ pub struct Card {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Stack {
-    cards: Vec<Card>,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
 pub struct ResolutionResult {
     card: Card,
     result: String,
+    player_health: u32,
+    opponent_health: u32,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Stack {
+    cards: Vec<Card>,
+    player_health: u32,
+    opponent_health: u32,
 }
 
 impl Stack {
     pub fn new() -> Self {
-        Stack { cards: vec![] }
+        Stack {
+            cards: vec![],
+            player_health: 20,
+            opponent_health: 20
+        }
     }
 
     pub fn add_to_stack(&mut self, card: Card) {
@@ -59,20 +69,27 @@ impl Stack {
                         results.push(ResolutionResult {
                             card: card.clone(),
                             result: format!("Countered {}", target.name),
+                            player_health: self.player_health,
+                            opponent_health: self.opponent_health,
                         });
                     }
                 }
                 Effect::DealDamage { amount } => {
                     if !countered_cards.contains(card) {
                         resolved_cards.push(card.clone());
+                        self.opponent_health = self.opponent_health.saturating_sub(*amount);
                         results.push(ResolutionResult {
                             card: card.clone(),
                             result: format!("Dealt {} damage", amount),
+                            player_health: self.player_health,
+                            opponent_health: self.opponent_health,
                         });
                     } else {
                         results.push(ResolutionResult {
                             card: card.clone(),
-                            result: "Was countered".to_string(),
+                            result: "Fizzled (was countered)".to_string(),
+                            player_health: self.player_health,
+                            opponent_health: self.opponent_health,
                         });
                     }
                 }
@@ -82,11 +99,15 @@ impl Stack {
                         results.push(ResolutionResult {
                             card: card.clone(),
                             result: "Resolved".to_string(),
+                            player_health: self.player_health,
+                            opponent_health: self.opponent_health,
                         });
                     } else {
                         results.push(ResolutionResult {
                             card: card.clone(),
-                            result: "Was countered".to_string(),
+                            result: "Fizzled (was countered)".to_string(),
+                            player_health: self.player_health,
+                            opponent_health: self.opponent_health,
                         });
                     }
                 }
